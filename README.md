@@ -23,3 +23,7 @@ produktu zamiast starego.
 6. Trigger będzie umożliwiać update produktu w tabeli produkt.
 7. Trigger będzie aktualizował status_zamówienia, jeżeli paczka dotarła.
 8. Trigger będzie umożliwiać usuwanie starych produktów, które już nie istnieją.
+
+
+## Model bazy danych (tabele, kolumny, typy)
+![](diagram.png)  

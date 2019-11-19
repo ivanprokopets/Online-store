@@ -153,3 +153,471 @@ GO
 SELECT * FROM kategoria
 */
 GO
+CREATE PROCEDURE [dbo].insert_klient
+	@imie VARCHAR(100),
+	@nazwisko VARCHAR(100),
+	@adres VARCHAR(100),
+	@telefon VARCHAR(100),
+	@email VARCHAR(100),
+	@IpAdress VARCHAR(100),
+	@haslo VARCHAR(100),
+	@znizka VARCHAR(100)
+AS
+	BEGIN TRY
+		INSERT INTO klient ([imie],
+							[nazwisko],
+							[adres],
+							[telefon],
+							[e_mail],
+							[IP_adress],
+							[haslo],
+							[znizka])
+					  VALUES
+						   (@imie,
+							@nazwisko,
+							@adres,
+							@telefon,
+							@email,
+							@IpAdress,
+							@haslo,
+							@znizka);
+	END TRY
+	BEGIN CATCH 
+		PRINT 'nie wolno wstawiac takiego samego e-mail adresu'
+	END CATCH
+/*
+wywolanie 2 procedury [dbo].insert_klient
+
+EXECUTE [dbo].insert_klient 'Fred',	'Prap',	'Warszawa, Grojecka 32',	'48511512351',	'v1a@gmail.com',	'192.215.124',	'155',	'0%'
+GO 
+SELECT * FROM klient
+*/
+GO
+CREATE PROCEDURE [dbo].insetr_kraj_pochodzenia
+	@nazwa_kraju VARCHAR(100),
+	@opis VARCHAR(100),
+	@logotyp VARCHAR(100)
+AS	
+	BEGIN TRY
+	INSERT INTO kraj_pochodzenia ([nazwa],
+								  [opis],
+								  [logotyp])
+							VALUES
+								 (@nazwa_kraju,
+								  @opis,
+								  @logotyp);
+	END TRY
+	BEGIN CATCH 
+		PRINT 'nie wolno wstawiac takiego samego kraju_pochodzenia'
+	END CATCH
+/*
+wywolanie 3 procedury [dbo].insert_kra_pochodzenia
+
+EXECUTE [dbo].insetr_kraj_pochodzenia 'Rumynia', 	'jest', 	'niema'
+GO
+SELECT * FROM kraj_pochodzenia
+*/
+GO
+CREATE PROCEDURE [dbo].insert_magazyn 
+	@nazwa_magazynu VARCHAR(100),
+	@adres VARCHAR(100),
+	@liczba_pracownikow INT
+AS
+	BEGIN TRY
+		INSERT INTO magazyn ([nazwa],
+							 [adres],
+							 [liczba_pracownikow])
+					  VALUES
+							(@nazwa_magazynu,
+							 @adres,
+							 @liczba_pracownikow);
+	END TRY
+	BEGIN CATCH 
+		PRINT 'nie wolno wstawiac takiego samego magazynu i adresu, juz istnieje'
+	END CATCH
+/*
+wywolanie 4 procedury [dbo].insert_magazyn
+
+EXECUTE [dbo].insert_magazyn 'magazyn_Ogrod', 'Wawelska 53',41
+GO
+SELECT * FROM magazyn
+*/
+GO
+CREATE PROCEDURE [dbo].insert_produkt
+	@nazwa_produktu VARCHAR(100),
+	@opis VARCHAR(100),
+	@model VARCHAR(100),
+	@cena_produktu DECIMAL,
+	@kategora_ID INT,
+	@magazyn_ID INT,
+	@kraj_pochodzenia_ID INT
+AS
+	INSERT INTO produkt ([nazwa_produktu],
+						 [opis],
+						 [model],
+						 [cena_produktu],
+						 [kategoria_ID],
+						 [magazyn_ID],
+						 [kraj_pochodzenia_ID])
+				  VALUES
+						(@nazwa_produktu,
+						 @opis,
+						 @model,
+						 @cena_produktu,
+						 @kategora_ID,
+						 @magazyn_ID,
+						 @kraj_pochodzenia_ID);
+/*
+wywolanie 5 procedury [dbo].insert_produkt
+
+EXECUTE [dbo].insert_produkt 'szczokta', 'dluga',	'Uniwirsalna', 20, 5, 5, 6
+GO
+SELECT * FROM produkt
+*/
+GO
+CREATE PROCEDURE [dbo].insert_status_zamowienieamowienia
+	@nazwa VARCHAR(100),
+	@data_czas_zamowienia DATETIME,
+	@opis VARCHAR(100)
+AS
+	INSERT INTO status_zamowienie ([nazwa],
+								   [data_czas_zamowienia],
+								   [opis])
+						    VALUES
+								  (@nazwa,
+								   @data_czas_zamowienia,
+								   @opis);
+/*
+wywolanie 6 procedury [dbo].insert_status_zamowienieamowienia
+
+EXECUTE [dbo].insert_status_zamowienieamowienia 'wyslano', '2018-05-25T14:25:10', 'prosze czekac'
+GO 
+SELECT * FROM status_zamowienie
+*/
+GO
+CREATE PROCEDURE [dbo].insert_zamowienie 
+	@nazwa_zamowienia VARCHAR(100),
+	@data_zamowienia datetime,
+	@cena_produktu DECIMAL,
+	@cena_zamowienia DECIMAL,
+	@sposob_dostawy VARCHAR(100),
+	@sposob_oplaty VARCHAR(100),
+	@produkt_ID INT,
+	@klient_ID INT,
+	@status_ID INT
+AS
+	INSERT INTO zamowienie ([nazwa_zamowienia],
+							[data_zamowienia],
+							[cena_produktu],
+							[cena_zamowienia],
+							[sposob_dostawy],
+							[sposob_oplaty],
+							[produkt_ID],
+							[klient_ID],
+							[status_ID])
+					 VALUES
+						   (@nazwa_zamowienia,
+							@data_zamowienia,
+							@cena_produktu,
+							@cena_zamowienia,
+							@sposob_dostawy,
+							@sposob_oplaty,
+							@produkt_ID,
+							@klient_ID,
+							@status_ID);
+/*
+wywolanie 7 procedury [dbo].insert_zamowienie
+
+EXECUTE [dbo].insert_zamowienie 'szczotka', '2018-05-25T14:25:10', 20, 5, 'kurjer', 'przy odbiorze', 1, 1, 1
+GO
+SELECT * FROM zamowienie
+*/
+GO
+CREATE PROCEDURE [dbo].update_kategoria
+	@ID INT,
+	@dostepnosc VARCHAR(100)
+AS
+	UPDATE kategoria
+	SET dostepnosc = @dostepnosc
+	WHERE ID = @ID
+/*
+wywolanie 8 procedury [dbo].update_kategoria
+
+EXECUTE [dbo].update_kategoria 4,'nie dostepne'
+GO
+SELECT * FROM kategoria 
+*/
+GO
+CREATE PROCEDURE [dbo].update_klient
+	@ID INT,
+	@adres VARCHAR(100),
+	@telefon VARCHAR(100),
+	@email VARCHAR(100),
+	@haslo VARCHAR(100),
+	@znizka VARCHAR(100)
+AS
+	UPDATE klient
+	SET adres = @adres,
+		telefon = @telefon,
+		e_mail = @email,
+		haslo = @haslo,
+		znizka = @znizka
+	WHERE ID = @ID
+/*
+wywolanie 9 procedury [dbo].update_klient
+
+EXECUTE [dbo].update_klient 4,'Lublin, Tosza 31', '48105523512', 'vankow@gmail.com', '412', '0%'
+GO
+SELECT * FROM klient
+*/
+GO
+CREATE PROCEDURE [dbo].update_kraj_pochodzenia
+	@ID INT,
+	@logotyp VARCHAR(100)
+AS
+	UPDATE kraj_pochodzenia
+	SET logotyp = @logotyp
+	WHERE ID = @ID
+/*
+wywolanie 10 procedury [dbo].update_kraj_pochodzenia
+
+EXECUTE [dbo].update_kraj_pochodzenia 5, 'jest'
+GO
+SELECT * FROM kraj_pochodzenia
+*/
+GO
+CREATE PROCEDURE [dbo].update_magazyn
+	@ID INT,
+	@liczba_pracownikow INT
+AS
+	UPDATE magazyn
+	SET liczba_pracownikow = @liczba_pracownikow
+	WHERE ID = @ID
+/*
+wywolanie 11 procedury [dbo].update_magazyn
+
+EXECUTE [dbo].update_magazyn 4, 5
+GO
+SELECT * FROM magazyn
+*/
+GO
+CREATE PROCEDURE [dbo].update_produkt
+	@ID INT,
+	@opis VARCHAR(100),
+	@cena_produktu VARCHAR(100)
+AS
+	UPDATE produkt
+	SET opis = @opis,
+		cena_produktu = @cena_produktu
+	WHERE ID = @ID
+/*
+wywolanie 12 procedury [dbo].update_produkt
+
+EXECUTE [dbo].update_produkt 20, 'zielony', '500'
+GO
+SELECT * FROM produkt
+*/
+GO
+CREATE PROCEDURE [dbo].update_status
+	@ID INT,
+	@opis VARCHAR(100)
+AS
+	UPDATE status_zamowienie
+	SET opis = @opis
+	WHERE ID = @ID
+/*
+wywolanie 13 procedury [dbo].update_status
+
+EXECUTE [dbo].update_status 3, 'kurjer sie skontaktuje'
+GO
+SELECT * FROM status_zamowienie
+*/
+GO
+CREATE PROCEDURE [dbo].update_zamowienie
+	@ID INT,
+	@cena_produktu VARCHAR(100),
+	@cena_zamowienia VARCHAR(100),
+	@sposob_dostawy VARCHAR(100),
+	@sposob_oplaty VARCHAR(100)
+AS
+	UPDATE zamowienie
+	SET cena_produktu = @cena_produktu,
+		cena_zamowienia = @cena_zamowienia,
+		sposob_dostawy = @sposob_dostawy,
+		sposob_oplaty = @sposob_oplaty
+	WHERE ID = @ID
+/*
+wywolanie 14 procedury [dbo].update_zamowienie
+
+EXECUTE [dbo].update_zamowienie 4, '640', '50', 'kurjer dostawczy', 'karta'
+GO
+SELECT * FROM zamowienie
+*/
+GO
+CREATE PROCEDURE [dbo].dodawanie_do_kategorii_i_magazynu
+	/*kategoria*/
+	@nazwa VARCHAR(100),
+	@zdjecie VARCHAR(100),
+	@dostepnosc VARCHAR(100),
+	/*magazyn*/
+	@nazwa_magazynu VARCHAR(100),
+	@adres VARCHAR(100),
+	@liczba_pracownikow INT
+AS
+	/*kategoria*/
+	INSERT INTO kategoria ([nazwa],
+						   [zdjecie],	
+						   [dostepnosc]) 
+					VALUES
+						  (@nazwa,
+						   @zdjecie,	
+						   @dostepnosc);
+	/*magazyn*/
+	INSERT INTO magazyn ([nazwa],
+						 [adres],
+						 [liczba_pracownikow])
+				  VALUES
+						(@nazwa_magazynu,
+						 @adres,
+						 @liczba_pracownikow);
+/*
+wywolanie 15 procedury [dbo].dodawanie_do_kategorii_i_magazynu
+
+EXECUTE [dbo].dodawanie_do_kategorii_i_magazynu /*kategoria*/'komorki', '+','dostepne',
+												/*magazyn*/  'komorki', 'Wilianowska 81',150;
+SELECT * FROM kategoria,magazyn;
+*/
+GO
+CREATE PROCEDURE [dbo].dodawanie_do_kraju_i_produktu
+	/*kraj_pochodzenia*/
+	@nazwa_kraju VARCHAR(100),
+	@opis VARCHAR(100),
+	@logotyp VARCHAR(100),
+	/*produkt*/
+	@nazwa_produktu VARCHAR(100),
+	@opis_produktu VARCHAR(100),
+	@model VARCHAR(100),
+	@cena_produktu DECIMAL,
+	@kategora_ID INT,
+	@magazyn_ID INT,
+	@kraj_pochodzenia_ID INT
+AS
+	/*kraj_pochodzenia*/
+	BEGIN TRY
+		INSERT INTO kraj_pochodzenia ([nazwa],
+									  [opis],
+									  [logotyp])
+								VALUES
+									 (@nazwa_kraju,
+									  @opis,
+									  @logotyp);
+	END TRY
+	BEGIN CATCH 
+		PRINT 'nie wolno wstawiac takiego samego kraju_pochodzenia'
+	END CATCH
+
+	/*produkt*/
+	INSERT INTO produkt ([nazwa_produktu],
+						 [opis],
+						 [model],
+						 [cena_produktu],
+						 [kategoria_ID],
+						 [magazyn_ID],
+						 [kraj_pochodzenia_ID])
+				  VALUES
+						(@nazwa_produktu,
+						 @opis_produktu,
+						 @model,
+						 @cena_produktu,
+						 @kategora_ID,
+						 @magazyn_ID,
+						 @kraj_pochodzenia_ID);
+/*
+wywolanie 16 procedury [dbo].dodawanie_do_kraju_i_produktu
+
+EXECUTE [dbo].dodawanie_do_kraju_i_produktu /*kraj*/   'Litwa', 'niema', 'niema',
+											/*produkt*/'FISCHER', 'niebieski',	'Rower Fischer 71GB', 900, 4, 4, 1;
+SELECT * FROM kraj_pochodzenia,produkt;
+*/
+GO
+CREATE PROCEDURE [dbo].dodawanie_do_zamowienia_klienta_statusa
+	/*zamowienie*/
+	@nazwa_zamowienia VARCHAR(100),
+	@data_zamowienia datetime,
+	@cena_produktu DECIMAL,
+	@cena_zamowienia DECIMAL,
+	@sposob_dostawy VARCHAR(100),
+	@sposob_oplaty VARCHAR(100),
+	@produkt_ID INT,
+	@klient_ID INT,
+	@status_ID INT,
+	/*klient*/
+	@imie VARCHAR(100),
+	@nazwisko VARCHAR(100),
+	@adres VARCHAR(100),
+	@telefon VARCHAR(100),
+	@email VARCHAR(100),
+	@IpAdress VARCHAR(100),
+	@haslo VARCHAR(100),
+	@znizka VARCHAR(100),
+	/*status*/
+	@nazwa VARCHAR(100),
+	@opis VARCHAR(100)
+AS
+	/*zamowienie*/
+	INSERT INTO zamowienie ([nazwa_zamowienia],
+							[data_zamowienia],
+							[cena_produktu],
+							[cena_zamowienia],
+							[sposob_dostawy],
+							[sposob_oplaty],
+							[produkt_ID],
+							[klient_ID],
+							[status_ID])
+					 VALUES
+						   (@nazwa_zamowienia,
+							@data_zamowienia,
+							@cena_produktu,
+							@cena_zamowienia,
+							@sposob_dostawy,
+							@sposob_oplaty,
+							@produkt_ID,
+							@klient_ID,
+							@status_ID);
+	/*klient*/
+	BEGIN TRY
+		INSERT INTO klient ([imie],
+							[nazwisko],
+							[adres],
+							[telefon],
+							[e_mail],
+							[IP_adress],
+							[haslo],
+							[znizka])
+					  VALUES
+						   (@imie,
+							@nazwisko,
+							@adres,
+							@telefon,
+							@email,
+							@IpAdress,
+							@haslo,
+							@znizka);
+	END TRY
+	BEGIN CATCH 
+		PRINT 'nie wolno wstawiac takiego samego e-mail adresu'
+	END CATCH
+	/*status*/
+	INSERT INTO status_zamowienie ([nazwa],
+						  [opis])
+				   VALUES
+						 (@nazwa,
+						  @opis);
+/*
+wywolanie 17 procedury [dbo].dodawanie_do_zamowienia_klienta_statusa
+
+EXECUTE [dbo].dodawanie_do_zamowienia_klienta_statusa /*zamowienie*/'szczotka', '2018/05/04', 20, 5, 'kurjer', 'przy odbiorze', 15, 2, 1,
+													  /*klient*/	'Bartek',	'Pietrowski',	'Gdansk, Morska 12', '48512432345', 'bartek@gmail.com',	'193.215.124',	'512',	'0%',
+													  /*status*/	'w trakcie wyslania', 'prosze czekac'
+SELECT * FROM zamowienie,klient,status_zamowienie
+*/

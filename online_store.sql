@@ -621,3 +621,247 @@ EXECUTE [dbo].dodawanie_do_zamowienia_klienta_statusa /*zamowienie*/'szczotka', 
 													  /*status*/	'w trakcie wyslania', 'prosze czekac'
 SELECT * FROM zamowienie,klient,status_zamowienie
 */
+
+
+/*Tworzenie Triggerow*/
+GO
+CREATE TRIGGER Trigger_zatwierdzenia_statusu_zamowienia_z_data
+			ON status_zamowienie
+	AFTER UPDATE 
+AS
+	BEGIN 
+		UPDATE status_zamowienie
+		SET data_czas_zamowienia = GETDATE()
+		FROM status_zamowienie s
+		INNER JOIN inserted i ON s.ID = i.ID
+		AND i.opis = 'zatwierdzony'
+	END 
+
+/*sprawdzanie Trigger_zatwierdzenia_statusu_zamowienia_z_data №1
+
+UPDATE status_zamowienie SET opis = 'zatwierdzony' WHERE ID=4
+GO 
+SELECT * FROM status_zamowienie
+GO
+*/
+GO
+
+CREATE TRIGGER Trigger_niedozwalone_znaki_produkt 
+			ON produkt FOR UPDATE, INSERT 
+AS
+	BEGIN
+	UPDATE produkt 
+	SET nazwa_produktu = REPLACE(nazwa_produktu, '/','') 
+	WHERE nazwa_produktu IN (SELECT i.nazwa_produktu FROM inserted i) 
+	AND nazwa_produktu LIKE '%/%' 
+	END
+/*sprawdzanie Trigger_niedozwalone_znaki_produkt  №2
+
+UPDATE produkt
+SET nazwa_produktu ='/Test1'
+WHERE id =1
+SELECT * FROM produkt
+*/
+/*
+INSERT produkt(nazwa_produktu) VALUES
+		('/Test2');
+GO 
+SELECT * FROM produkt
+GO
+*/
+
+GO
+CREATE TRIGGER Trigger_haszowanie_hasla_klienta
+			ON klient
+	AFTER INSERT, UPDATE 
+AS
+	DECLARE @klient_haslo VARCHAR(100)
+	DECLARE @ID_klient VARCHAR(100)
+	BEGIN TRY
+		SELECT @klient_haslo = i.haslo, @ID_klient = i.ID FROM inserted i;
+		UPDATE klient 
+		SET haslo = HASHBYTES('md5',@klient_haslo) WHERE ID=@ID_klient 
+	END TRY
+	BEGIN CATCH 
+		PRINT 'nie wolno wstawiac takiego samego e-mail adresu'
+	END CATCH
+
+/*sprawdzanie Trigger_haszowanie_hasla_klienta №1,3
+
+INSERT INTO klient (imie,		nazwisko,		adres,					telefon,		e_mail,			IP_adress,		haslo,		znizka) VALUES 
+				   ('Vasia',	'Ivanov',	'Brest, Brestka 39',	'48510512151',	'vasia@gmail.com',	'196.213.124',	'112423',	'0%');
+GO
+SELECT * FROM klient
+GO
+*/
+
+GO
+CREATE TABLE KlientLogs (
+	ID_log INT NOT NULL IDENTITY PRIMARY KEY,
+	ID_klient INT NOT NULL,
+	dzialanie VARCHAR(100) NULL,
+	data_dzialania DATETIME
+)
+
+GO
+CREATE TRIGGER Trigger_info_o_wstawieniu_rekordu_klient
+			ON klient
+	AFTER INSERT
+AS
+	BEGIN TRY
+		DECLARE @ID_klient INT
+
+		SELECT @ID_klient = inserted.ID FROM inserted
+
+		INSERT INTO KlientLogs (ID_klient,	 dzialanie,	 data_dzialania) VALUES
+							   (@ID_klient, 'Wstawiono', GETDATE());
+	END TRY
+	BEGIN CATCH 
+		PRINT 'nie wolno wstawiac takiego samego e-mail adresu'
+	END CATCH
+
+/*sprawdzanie Trigger_info_o_wstawieniu_rekordu_klient №2
+
+INSERT INTO klient (imie,		nazwisko,		adres,					telefon,		e_mail,			IP_adress,		haslo,		znizka) VALUES 
+				   ('Vasia',	'Ivanov',	'Brest, Brestka 39',	'48510512151',	'vasiatest@gmail.com',	'196.213.124',	'112423',	'0%');
+GO
+SELECT * FROM KlientLogs
+GO
+*/
+GO
+CREATE TRIGGER Trigger_info_o_zmianie_danych_klienta
+			ON klient
+	AFTER UPDATE
+AS
+	BEGIN
+		DECLARE @ID_klient INT
+		DECLARE @Dzialanie VARCHAR(100)
+		 
+			IF UPDATE(imie)
+				BEGIN
+					SET @Dzialanie = 'Zaktualizowane imie'
+				END
+ 
+			IF UPDATE(nazwisko)
+				BEGIN	
+					SET @Dzialanie = 'Zaktualizowane nazwisko'
+				END
+			IF UPDATE(adres)
+				BEGIN	
+					SET @Dzialanie = 'Zaktualizowany adres'
+				END
+			IF UPDATE(telefon)
+				BEGIN	
+					SET @Dzialanie = 'Zaktualizowany telefon'
+				END
+			IF UPDATE(e_mail)
+				BEGIN	
+					SET @Dzialanie = 'Zaktualizowany mail'
+				END
+			IF UPDATE(haslo)
+				BEGIN	
+					SET @Dzialanie = 'Zaktualizowane haslo'
+				END
+			IF UPDATE(znizka)
+				BEGIN	
+					SET @Dzialanie = 'Zmieniona znizka'
+				END
+ 
+		INSERT INTO KlientLogs (		ID_klient,					dzialanie,	 data_dzialania) VALUES
+							   ((SELECT inserted.ID FROM inserted), @Dzialanie,  GETDATE());
+	END
+/*sprawdzanie Trigger_info_o_zmianie_danych_klienta №4
+
+	UPDATE klient 
+	SET znizka = '29%'
+	WHERE ID=4;
+GO
+SELECT * FROM KlientLogs
+GO
+*/
+
+GO
+CREATE TRIGGER Trigger_info_o_usunieciu_klienta
+			ON klient 
+	AFTER DELETE
+AS
+	BEGIN TRY
+		DECLARE @ID_klient INT
+		
+		DELETE Z From deleted d 
+		JOIN dbo.zamowienie Z ON d.ID IN (Z.klient_ID);
+		DELETE klient
+		FROM deleted
+		WHERE deleted.ID = klient.ID;
+		SELECT @ID_klient = deleted.ID FROM deleted
+		
+		
+		
+		INSERT INTO KlientLogs (			ID_klient,			  dzialanie,  data_dzialania) VALUES
+							   ((SELECT deleted.ID FROM deleted), 'Usunieto', GETDATE());
+	
+	END TRY
+	BEGIN CATCH
+		PRINT 'Wprowadzony klient już jest usuniety'
+	END CATCH
+/*sprawdzanie Trigger_info_o_usunieciu_klienta №1
+	DELETE FROM klient
+	WHERE ID = 7;
+GO
+SELECT * FROM KlientLogs
+GO
+ */
+GO
+CREATE TRIGGER Trigger_delete_NULL_dzialania	
+			 ON KlientLogs 
+	FOR UPDATE,INSERT
+AS
+	BEGIN
+		DELETE FROM KlientLogs
+		WHERE dzialanie IS NULL
+	END
+/*Trigger_nie_da_sie_sprawdzic*/
+GO
+CREATE TABLE ProduktLogs (
+	ID_log INT NOT NULL IDENTITY PRIMARY KEY,
+	ID_Produkt INT NOT NULL,
+	dzialanie VARCHAR(100) NOT NULL,
+	data_dzialania DATETIME
+)
+
+GO
+CREATE TRIGGER Trigger_info_o_usunieciu_produktu
+			 ON produkt
+	AFTER DELETE
+AS
+	BEGIN TRY
+		INSERT INTO ProduktLogs (		ID_Produkt,						dzialanie,	  data_dzialania) VALUES
+							   ((SELECT deleted.ID FROM deleted), 'Usunieto', GETDATE());
+	END TRY 
+	BEGIN CATCH
+		PRINT 'Wprowadzony produkt już jest usuniety'
+	END CATCH
+/*sprawdzanie Trigger_info_o_usunieciu_produktu №2
+	DELETE FROM produkt
+	WHERE ID = 6;
+GO
+SELECT * FROM ProduktLogs
+*/
+
+GO
+CREATE TRIGGER Trigger_przepisania_pierwsza_litery_imienia_i_nazwiska_do_tabeli_IN
+			ON klient 
+	FOR UPDATE
+AS
+	IF UPDATE(nazwisko) OR UPDATE(imie)
+	UPDATE klient SET I_N = LEFT(imie,1) + nazwisko
+	WHERE ID IN (SELECT i.ID FROM inserted i)
+	GO
+	
+/*sprawdzanie Trigger_przepisania_pierwsza_litery_imienia_i_nazwiska_do_tabeli_IN №2
+	UPDATE klient
+	SET imie = 'Petia', nazwisko ='Wiatrokowski'
+	WHERE ID =4;
+GO
+SELECT * FROM klient
+*/

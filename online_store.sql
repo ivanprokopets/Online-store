@@ -2,6 +2,84 @@ CREATE DATABASE projekt_sklep3
 GO
 use projekt_sklep3
 GO
+IF EXISTS	(SELECT 1 FROM sysobjects o
+			WHERE (o.[name] = 'pr_rmv_table')
+			AND	(OBJECTPROPERTY(o.[ID],'IsProcedure')=1)
+			)
+	BEGIN
+		DROP PROCEDURE pr_rmv_table		
+	END
+GO
+CREATE PROCEDURE [dbo].pr_rmv_table
+	(@table_name nvarchar(100))
+AS
+/* Procedura sprawdza czy istnieje w bazie tabela @table_name
+** Jak tak to usuwa j№
+*/
+	DECLARE @stmt nvarchar(1000)
+
+	IF EXISTS ( SELECT 1 FROM sysobjects o
+				WHERE (o.[name] = @table_name)
+				AND	(OBJECTPROPERTY(o.[ID],'IsUserTable')=1)
+			   )
+	BEGIN
+		SET @stmt = 'DROP TABLE ' + @table_name
+		EXECUTE sp_executeSQL @stmt = @stmt
+	END
+GO
+/* Usuniкcie tabel w kolejnosci odwrotnej do ich zaloїenia */
+
+EXEC pr_rmv_table @table_name='ProduktLogs'
+EXEC pr_rmv_table @table_name='KlientLogs'
+EXEC pr_rmv_table @table_name='zamowienie'
+EXEC pr_rmv_table @table_name='status_zamowienie'
+EXEC pr_rmv_table @table_name='klient'
+EXEC pr_rmv_table @table_name='produkt'
+EXEC pr_rmv_table @table_name='osoba'
+EXEC pr_rmv_table @table_name='kraj_pochodzenia'
+EXEC pr_rmv_table @table_name='magazyn'
+EXEC pr_rmv_table @table_name='kategoria'
+
+/*Usuniecie wszystkich tablic
+DROP TABLE ProduktLogs
+DROP TABLE KlientLogs
+DROP TABLE zamowienie
+DROP TABLE status_zamowienie
+DROP TABLE klient
+DROP TABLE produkt
+DROP TABLE kraj_pochodzenia
+DROP TABLE magazyn
+DROP TABLE kategoria*/
+/*Usuniecie procedur
+DROP PROCEDURE [dbo].insert_kategoria
+DROP PROCEDURE [dbo].insert_magazyn
+DROP PROCEDURE [dbo].insert_klient
+DROP PROCEDURE [dbo].insert_produkt
+DROP PROCEDURE [dbo].insert_zamowienie
+DROP PROCEDURE [dbo].insert_status_zamowienieamowienia
+DROP PROCEDURE [dbo].insetr_kraj_pochodzenia
+DROP PROCEDURE [dbo].dodawanie_do_kategorii_i_magazynu
+DROP PROCEDURE [dbo].dodawanie_do_kraju_i_produktu
+DROP PROCEDURE [dbo].dodawanie_do_zamowienia_klienta_statusa
+DROP PROCEDURE [dbo].update_kategoria
+DROP PROCEDURE [dbo].update_klient
+DROP PROCEDURE [dbo].update_kraj_pochodzenia
+DROP PROCEDURE [dbo].update_magazyn
+DROP PROCEDURE [dbo].update_produkt
+DROP PROCEDURE [dbo].update_status
+DROP PROCEDURE [dbo].update_zamowienie
+*/
+/*Usuniecie trigerow
+DROP TRIGGER Trigger_zatwierdzenia_statusu_zamowienia_z_data
+DROP TRIGGER Trigger_niedozwalone_znaki_produkt
+DROP TRIGGER Trigger_haszowanie_hasla_klienta
+DROP TRIGGER Trigger_info_o_wstawieniu_rekordu_klient
+DROP TRIGGER Trigger_info_o_zmianie_danych_klienta
+DROP TRIGGER Trigger_info_o_usunieciu_klienta
+DROP TRIGGER Trigger_delete_NULL_dzialania
+DROP TRIGGER Trigger_info_o_usunieciu_produktu
+DROP TRIGGER Trigger_przepisania_pierwsza_litery_imienia_i_nazwiska_do_tabeli_IN
+*/
 CREATE TABLE kategoria (
 ID INT NOT NULL IDENTITY PRIMARY KEY,
 nazwa VARCHAR(100) NOT NULL,
